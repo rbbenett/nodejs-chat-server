@@ -9,11 +9,16 @@ const mongoDB = process.env.MONGO_DB;
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => console.log('connected')).catch(err => console.log(err));
 const { addUser, getUser, removeUser } = require('./helper');
 const PORT = process.env.PORT || 5000;
+const Room = require('./models/Room');
 
 io.on('connection', (socket) => {
   console.log(socket.id);
   socket.on('create-room', name => {
-    console.log(`The room name recieved is ${name}`)
+    // console.log(`The room name recieved is ${name}`)
+    const room = new Room({name});
+    room.save().then(result => {
+      io.emit('room-created', result)
+    })
   })
   socket.on('join', ({ name, room_id, user_id }) => {
     const { error, user } = addUser({
