@@ -1,18 +1,24 @@
 require('dotenv').config();
 
-const app = require('express')();
-const http = require('http').createServer(app);
 const mongoose = require('mongoose');
 const socketio = require('socket.io');
+const Room = require('./models/Room');
+
+const app = require('express')();
+const http = require('http').createServer(app);
+const PORT = process.env.PORT || 5000;
 const io = socketio(http);
 const mongoDB = process.env.MONGO_DB;
-mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => console.log('connected')).catch(err => console.log(err));
+
 const { addUser, getUser, removeUser } = require('./helper');
-const PORT = process.env.PORT || 5000;
-const Room = require('./models/Room');
+
+mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => console.log('connected')).catch(err => console.log(err));
 
 io.on('connection', (socket) => {
   console.log(socket.id);
+  Room.find().then(result => {
+    socket.emit('output-rooms', result)
+  })
   socket.on('create-room', name => {
     // console.log(`The room name recieved is ${name}`)
     const room = new Room({name});
